@@ -14,6 +14,11 @@ class TestRcodes(unittest.TestCase):
     def setUp(self):
         self.resolver = get_resolver(addresses=RESOLVER_LIST)
 
+    def test_null_resolver(self):
+        qname = 'blahblah.salesforce.com'
+        qtype = 'A'
+        self.assertEqual(rcode(qname, qtype), dns.rcode.NXDOMAIN)
+
     def test_blacklie_nxdomain(self):
         qname = 'blahblah.documentforce.com'
         qtype = 'A'

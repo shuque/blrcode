@@ -62,6 +62,9 @@ def rcode(qname, qtype, resolver=None):
     the actual rcode observed in the DNS reply message.
     """
 
+    if resolver is None:
+        resolver = get_resolver()
+
     qname = dns.name.from_text(qname)
     try:
         msg = resolver.query(qname, qtype, raise_on_no_answer=False).response
