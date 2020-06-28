@@ -21,17 +21,18 @@ import dns.rcode
 RESOLVER_LIST = ['8.8.8.8', '1.1.1.1']
 
 
-def get_resolver(addresses, lifetime=5, payload=1420):
+def get_resolver(addresses=None, lifetime=5, payload=1420):
     """
-    Return resolver object configured to use given list of addresses,
-    and that sets DO=1, AD=1, and EDNS payload for outbound queries.
+    Return resolver object configured to use given list of addresses, and
+    that sets DO=1, RD=1, AD=1, and EDNS payload for queries to the resolver.
     """
 
     resolver = dns.resolver.Resolver()
     resolver.set_flags(dns.flags.RD | dns.flags.AD)
     resolver.use_edns(edns=0, ednsflags=dns.flags.DO, payload=payload)
     resolver.lifetime = lifetime
-    resolver.nameservers = addresses
+    if addresses is not None:
+        resolver.nameservers = addresses
     return resolver
 
 
@@ -47,15 +48,14 @@ def nsec_type_set(nsec_windows):
     type_set = set()
     for (window, bitmap) in nsec_windows:
         for i in range(0, len(bitmap)):
-            byte = bitmap[i]
             for j in range(0, 8):
-                if byte & (0x80 >> j):
+                if bitmap[i] & (0x80 >> j):
                     rrtype = window * 256 + i * 8 + j
                     type_set.add(dns.rdatatype.to_text(rrtype))
     return type_set
 
 
-def rcode(resolver, qname, qtype):
+def rcode(qname, qtype, resolver=None):
     """
     Return rcode for given DNS qname and qtype. If a blacklies style
     NOERROR response is detected, return NXDOMAIN. Otherwise return
@@ -95,8 +95,8 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     QNAME, QTYPE = sys.argv[1:3]
-    RESOLVER = get_resolver(RESOLVER_LIST)
-    RC = rcode(RESOLVER, QNAME, QTYPE)
+    RESOLVER = get_resolver(addresses=RESOLVER_LIST)
+    RC = rcode(QNAME, QTYPE, resolver=RESOLVER)
 
     print(dns.rcode.to_text(RC))
     sys.exit(RC)
