@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 """
+blrcode.py: Black Lies enhanced rcode function.
+
 Query given DNS name and type, and return the response code.
 If a blacklies style NODATA response is returned, detect whether
 it is actually a non-existent domain and return NXDOMAIN instead.
@@ -41,12 +43,12 @@ def is_authenticated(msg):
     return msg.flags & dns.flags.AD == dns.flags.AD
 
 
-def nsec_type_set(nsec_windows):
+def nsec_type_set(type_bitmaps):
     """
-    Return set of RR types present in given NSEC rdata's windows.
+    Return set of RR types present in given NSEC record's type bitmap.
     """
     type_set = set()
-    for (window, bitmap) in nsec_windows:
+    for (window, bitmap) in type_bitmaps:
         for i in range(0, len(bitmap)):
             for j in range(0, 8):
                 if bitmap[i] & (0x80 >> j):
@@ -60,6 +62,15 @@ def rcode(qname, qtype, resolver=None):
     Return rcode for given DNS qname and qtype. If a blacklies style
     NOERROR response is detected, return NXDOMAIN. Otherwise return
     the actual rcode observed in the DNS reply message.
+
+    A black lies style NOERROR response is a NXDOMAIN response
+    disguised as a NOERROR/NODATA. It is identified by a DNSSEC
+    authenticated (AD=1) NOERROR response with an empty answer
+    section, and an authority section containing an NSEC record
+    matching the query name that only containts NSEC and RRSIG in
+    its type bitmap. At the current time only Cloudflare and NS1
+    are known to use this hack. For details, see:
+    https://tools.ietf.org/html/draft-valsorda-dnsop-black-lies-00
     """
 
     if resolver is None:
@@ -74,13 +85,9 @@ def rcode(qname, qtype, resolver=None):
     if is_authenticated(msg) and (
             msg.rcode() == dns.rcode.NOERROR and not msg.answer):
         for rrset in msg.authority:
-            if rrset.rdtype == dns.rdatatype.SOA:
-                continue
-            elif rrset.rdtype == dns.rdatatype.RRSIG:
-                continue
-            if rrset.rdtype != dns.rdatatype.NSEC:
-                return msg.rcode()
             if rrset.name != qname:
+                continue
+            if  rrset.rdtype != dns.rdatatype.NSEC:
                 continue
             for rdata in rrset.to_rdataset():
                 if nsec_type_set(rdata.windows) == set({'NSEC', 'RRSIG'}):
