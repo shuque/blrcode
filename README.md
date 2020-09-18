@@ -28,9 +28,13 @@ At the current time, Cloudflare and NS1 are known to implement
 Black Lies. Cloudflare actually has an additional hack to differentiate
 the empty non-terminal case. Instead of the correct response for an
 ENT, it returns a made up jumble of other RR types in the type bitmap.
-Ugly as it is, NS1 should probably do the same.
+That's quite ugly, and has the additional side effect of not being
+able to distinguish Empty Non-Terminals from other types of NODATA
+responses. Nevertheless, I've suggested to NS1 to implement something
+like this since it is usually much more important to detect non-
+existence. The specific proposal under consideration is to add a
+private RRtype to the NSEC bitmap of Empty Non-Terminal responses.
 
 There are diagnostic and analysis tools that rely on obtaining
 correct DNS response codes. So, there needs to be a reliable way
-of inferring the real response code in spite of these hacks.
-
+of inferring the real response status in spite of these hacks.
