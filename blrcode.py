@@ -78,7 +78,7 @@ def rcode(qname, qtype, resolver=None):
 
     qname = dns.name.from_text(qname)
     try:
-        msg = resolver.query(qname, qtype, raise_on_no_answer=False).response
+        msg = resolver.resolve(qname, qtype, raise_on_no_answer=False).response
     except dns.resolver.NXDOMAIN:
         return dns.rcode.NXDOMAIN
 
