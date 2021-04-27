@@ -7,8 +7,8 @@ SERVFAIL, NOTIMP, etc. It uses the locally configured default
 DNS resolver to perform the lookup.
 
 If using a validating resolver, it also tries to detect if the
-name is in a DNSSEC signed zone that employs the gruesome hack
-known as "Black Lies", described in this expired Internet-draft:
+name is in a DNSSEC signed zone that employs the hack known as
+"Black Lies", described in this expired Internet-draft:
 
     https://tools.ietf.org/html/draft-valsorda-dnsop-black-lies-00
 
@@ -38,6 +38,12 @@ I've made an enhancement request to NS1 to implement another method
 to distinguish non-existence from an empty non-terminal response. The
 specific proposal under consideration is to add a private RRtype to the
 NSEC bitmap of Empty Non-Terminal responses.
+
+[Update: As of April 20th 2021, NS1 has implemented this request.
+For Empty Non-Terminal responses, they now add an additional private
+RRtype, currently 65281, to the type bitmap. This allows these responses
+to be distinguished from NXDOMAIN. This sentinal type can now also be
+used to identify Empty Non-Terminals.]
 
 There are diagnostic and analysis tools that rely on obtaining
 correct DNS response codes. So, there needs to be a reliable way
